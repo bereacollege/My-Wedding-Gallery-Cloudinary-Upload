@@ -115,7 +115,7 @@ function getFromCache() {
         // Check if cache is still valid
         if (now - cacheData.timestamp > CACHE_DURATION) {
             localStorage.removeItem(CACHE_KEY);
-      return null;
+            return null;
         }
 
         return cacheData.images;
@@ -207,7 +207,7 @@ function sortGalleryItems(method) {
     galleryItems.sort((a, b) => {
         switch(method) {
             case 'newest':
-          return new Date(b.timestamp) - new Date(a.timestamp);
+                return new Date(b.timestamp) - new Date(a.timestamp);
             case 'oldest':
                 return new Date(a.timestamp) - new Date(b.timestamp);
             case 'name':
@@ -221,7 +221,7 @@ function sortGalleryItems(method) {
 function filterGalleryItems(searchTerm) {
     return galleryItems.filter(item => {
         const name = item.metadata?.name?.toLowerCase() || '';
-  return name.includes(searchTerm.toLowerCase());
+        return name.includes(searchTerm.toLowerCase());
     });
 }
 
