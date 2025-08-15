@@ -15,7 +15,7 @@ cloudinary.config({
 
 // Enable CORS for local dev (allow Vite origin)
 app.use(CORS({
-  origin: ['http://localhost:5177', 'http://localhost:3000', 'http://127.0.0.1:5177'],  // Add your Vite port
+  origin: ['http://localhost:5176', 'http://localhost:3000', 'http://127.0.0.1:5177'],  // Add your Vite port
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Accept'],
   optionsSuccessStatus: 204 
