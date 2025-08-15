@@ -35,6 +35,9 @@ themeBtn.onclick = () => {
 document.body.appendChild(themeBtn);
 
 // Initialize Cloudinary Upload Widget
+console.log('Initializing upload widget with cloud name:', import.meta.env.VITE_CLOUDINARY_CLOUD_NAME);
+console.log('Upload preset:', import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
+
 const uploadWidget = cloudinary.createUploadWidget(
     {
         cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME,
@@ -68,26 +71,54 @@ const uploadWidget = cloudinary.createUploadWidget(
             }
         }
     },
-    (error, result) => {
+    async (error, result) => {
         if (!error && result && result.event === 'success') {
             console.log('Upload success:', result.info);
             
             // Get the optimized URL from Cloudinary
             const imageUrl = result.info.secure_url;
             
-            // Add metadata for the gallery
-            const metadata = {
-                name: guestName, // Use the collected guest name
-                filename: result.info.original_filename,
-                timestamp: new Date().toISOString()
-            };
-            
-            // Add to gallery and show thank you message
-            addToGallery(imageUrl, false, metadata);
-            showThankYou();
-            
-            // Log success
-            console.log('Added to gallery:', imageUrl);
+            try {
+                // Save image info to our database
+                const response = await fetch('/api/save-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        url: imageUrl,
+                        cloudinaryId: result.info.public_id,
+                        contributor: guestName,
+                        filename: result.info.original_filename
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to save image info');
+                }
+
+                const savedImage = await response.json();
+                
+                // Add metadata for the gallery
+                const metadata = {
+                    name: guestName,
+                    filename: result.info.original_filename,
+                    timestamp: new Date().toISOString()
+                };
+                
+                // Add to gallery and show thank you message
+                addToGallery(imageUrl, false, metadata);
+                showThankYou();
+                
+                // Log success
+                console.log('Added to gallery:', savedImage);
+            } catch (error) {
+                console.error('Error saving image:', error);
+                console.error('Response status:', error.response?.status);
+                console.error('Response text:', await error.response?.text());
+                alert('Image uploaded but there was an error saving the information. Please try again.');
+            }
         }
     }
 );
@@ -128,6 +159,7 @@ function getFromCache() {
 // Function to load existing images from Cloudinary
 async function loadExistingImages() {
     try {
+        console.log('Starting to load existing images...');
         // Clear existing error messages if any
         const existingError = galleryContainer.querySelector('.gallery-error');
         if (existingError) {
@@ -144,11 +176,20 @@ async function loadExistingImages() {
         galleryContainer.appendChild(loadingEl);
 
         // Try to get images from cache first
+        console.log('Checking cache...');
         let images = getFromCache();
         
         if (!images) {
             // If not in cache, fetch from server
-            const response = await fetch('/api/get-gallery-images');
+            console.log('No cache found or expired, fetching from API...');
+            const response = await fetch('/api/get-gallery-images', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+            console.log('API response status:', response.status);
             if (!response.ok) {
                 throw new Error('Failed to fetch images');
             }
@@ -165,18 +206,16 @@ async function loadExistingImages() {
         // Clear the gallery container before adding new images
         galleryContainer.innerHTML = '';
 
-        // Sort images by timestamp (newest first)
-        images.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
+        // Images are already sorted by createdAt from the server
         // Add each image to the gallery
         for (const image of images) {
             const metadata = {
-                name: image.context?.custom?.contributor || 'Wedding Guest',
-                timestamp: image.created_at,
+                name: image.contributor || 'Wedding Guest',
+                timestamp: image.createdAt,
                 filename: image.filename
             };
 
-            addToGallery(image.secure_url, false, metadata);
+            addToGallery(image.url, false, metadata);
         }
 
         // Update the photo count
@@ -184,7 +223,11 @@ async function loadExistingImages() {
         
     } catch (error) {
         console.error('Error loading existing images:', error);
-        
+        const errorEl = document.createElement('div');
+        errorEl.className = 'gallery-error';
+        errorEl.innerHTML = '<p>Unable to load gallery. Please refresh or try later.</p>';
+        galleryContainer.appendChild(errorEl);
+  
         // Try to get images from cache as fallback
         const cachedImages = getFromCache();
         if (cachedImages) {
@@ -270,11 +313,12 @@ function updateGallery() {
 
 // Initialize everything when the DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize gallery first
-    initGallery();
     
     // Then load existing images
     loadExistingImages();
+
+    // Initialize gallery first
+    initGallery();
     
     // Set up event listeners for controls
     document.getElementById('sort-select').addEventListener('change', updateGallery);

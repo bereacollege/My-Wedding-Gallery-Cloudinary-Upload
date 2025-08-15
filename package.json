@@ -4,12 +4,14 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"vite\" \"node api/index.js\"",
+    "dev": "concurrently \"vite\" \"node api/index.cjs\"",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "node api/index.js"
+    "start": "node api/index.cjs"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.0",
+    "@vitejs/plugin-vue": "^6.0.1",
     "vite": "^7.0.4"
   },
   "dependencies": {
@@ -23,6 +25,8 @@
     "crypto-js": "^4.2.0",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
-    "lightgallery": "^2.9.0-beta.1"
+    "lightgallery": "^2.9.0-beta.1",
+    "mongodb": "^6.18.0",
+    "mongoose": "^8.17.1"
   }
 }
