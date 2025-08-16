@@ -20,17 +20,19 @@ router.get('/test-connection', async (req, res) => {
     }
 });
 
-// Get all images
+// Get all images used by frontend
 router.get('/get-gallery-images', async (req, res) => {
     try {
         const images = await Image.find().sort({ createdAt: -1 });
         res.json(images);
     } catch (error) {
+        console.error('Error fetching images:', error);
+        // Return a 500 error with a message
         res.status(500).json({ error: 'Failed to fetch images' });
     }
 });
 
-// Save image
+// Save image after cloudinary upload
 router.post('/save-image', async (req, res) => {
     try {
         const { url, cloudinaryId, contributor, filename } = req.body;

@@ -1,6 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-// Ensure the API base URL is set
-
+import './style.css'
 import lightGallery from 'lightgallery'
 import lgThumbnail from 'lightgallery/plugins/thumbnail'
 import 'lightgallery/css/lightgallery.css'
@@ -61,9 +59,9 @@ const uploadWidget = cloudinary.createUploadWidget(
         cropping: false,
         multiple: true,
         defaultSource: 'local',
-        resourceType: 'image', 
+        resourceType: 'image',
         clientAllowedFormats: ['jpg', 'jpeg', 'png', 'heic', 'heif'],
-        maxFileSize: 50000000, // 50MB in bytes
+        maxFileSize: 10000000, // 10MB in bytes
         styles: {
             palette: {
                 window: '#FFFFFF',
@@ -91,7 +89,7 @@ const uploadWidget = cloudinary.createUploadWidget(
             
             try {
                 // Save image info to our database
-                const response = await fetch('$ {API_BASE}/save-image', {
+                const response = await fetch('/api/save-image', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -195,7 +193,7 @@ async function loadExistingImages() {
         if (!images) {
             // If not in cache, fetch from server
             console.log('No cache found or expired, fetching from API...');
-            const response = await fetch('$ {API_BASE_URL}/get-gallery-images', {
+            const response = await fetch('/api/get-gallery-images', {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',

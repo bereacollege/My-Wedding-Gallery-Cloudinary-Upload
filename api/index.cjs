@@ -17,7 +17,7 @@ cloudinary.config({
 const app = express();
 
 app.use(CORS({
-  origin: ['http://localhost:5177', 'http://localhost:3000', 'http://127.0.0.1:5177'],
+  origin: ['http://localhost:5177', 'http://localhost:3000', 'http://127.0.0.1:5177', 'https://my-wedding-gallery-cloudinary-uploa.vercel.app'],
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Accept'],
   optionsSuccessStatus: 204 
@@ -50,7 +50,13 @@ app.use('/api', imageRoutes);
 console.log('Mounted /api routes:', imageRoutes.stack?.map(r => r.route?.path));
  // ➕
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
+ //if running locally, start the server
+if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
 });
+}
+
+// Export the app for serverless deployment
+module.exports = app;
